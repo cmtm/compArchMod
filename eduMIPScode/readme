@@ -1,0 +1,46 @@
+EduMIPS64 README
+================
+
+EduMIPS64 is a cross-platform visual MIPS64 CPU simulator written in
+Java/swing. To learn how it works and how to use it, please refer to the
+EduMIPS64 User Manual (in the docs/{en,it}/output/latex directory). This file
+is a short guide for developers.
+
+Requirements
+------------
+
+In order to compile EduMIPS64, you need the following tools:
+- Java JDK version 1.5 or above (tested only with Sun JDK)
+- Apache Ant version 1.8 or above (needed for JUnit 4 tests)
+
+If you need to compile the in-application help, you need:
+- Sphinx (http://sphinx.pocoo.org/) versione 1.0.7 or above
+- GNU Make
+
+If you need to compile the PDF manual, you will also need:
+- latex / pdflatex
+
+If you need to run unit tests, or build the javadoc, you will also need:
+- JUnit version 4
+
+Main Ant targets
+----------------
+
+* `jar` builds the jar package named edumips64-`version`.jar
+
+* `docs` builds the user documentation (both in-app HTML and PDF)
+
+* `clean` removes the jar files, the build directory and the compiled
+  documentation
+
+* `tests` runs unit tests; it depends on junit4.jar being added to the
+  CLASSPATH environment variable
+
+* `debugjar` builds a jar package that contains more debug information
+
+* `clijar` build a jar package containing an experimental CLI front-end
+
+* `src-release` builds a tar.bz2 file containing the source distribution
+
+* `javadoc` builds the javadoc documentation (depends on junit4.jar being
+  in CLASSPATH); will store it in the `javadoc` directory.
