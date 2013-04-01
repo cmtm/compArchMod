@@ -1,0 +1,6 @@
+*.un~
+*.jar
+*.sw*
+build
+build/*
+docs/*/output

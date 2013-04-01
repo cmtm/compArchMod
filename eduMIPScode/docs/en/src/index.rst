@@ -12,6 +12,11 @@ implemented by the simulator, allowing the user to see how instructions behave
 in the pipeline, how stalls are handled by the CPU, the status of registers and
 memory and much more. It is both a simulator and a visual debugger.
 
+The website for the project is http://www.edumips.org, and the code is hosted
+at http://github.com/lupino3/edumips64. If you find any bugs, or have any
+suggestion for improving the simulator, please open an issue on github or send
+an email at bugs@edumips.org.
+
 EduMIPS64 is developed by a group of students of the University of Catania (Italy),
 and started as a clone of WinMIPS64, even if now there are lots of differences
 between the two simulators.
@@ -30,7 +35,7 @@ explains the purpose of each frame and menu, along with a description of the
 configuration dialog, the Dinero frontend dialog, the Manual dialog and
 command line options. The fifth chapter contains some useful examples.
 
-This manual describes EduMIPS64 version 1.0.
+This manual describes EduMIPS64 version 1.1.
 
 .. toctree::
    :maxdepth: 2

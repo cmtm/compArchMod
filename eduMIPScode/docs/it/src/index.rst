@@ -12,6 +12,11 @@ all'utente di vedere come le istruzioni si comportino nella pipeline, come gli
 stalli siano gestiti dalla CPU, lo stato di registri e memoria e molto altro.
 È classificabile sia come simulatore, sia come debugger visuale.
 
+Il sito web del progetto è http://www.edumips.org, ed il codice sorgente è
+disponibile presso http://github.com/lupino3/edumips64. Per segnalare bug o
+inviare suggerimenti sul simulatore, è possibile aprire una issue su github o
+inviare una mail a bugs@edumips.org.
+
 EduMIPS64 è stato progettato e sviluppato da un gruppo di studenti
 dell'Università degli Studi di Catania, ed ha tratto spunto, come interfaccia
 e come funzionamento, dal simulatore WinMIPS64, sebbene vi siano alcune
@@ -36,7 +41,7 @@ delle opzioni da linea di comando.
 
 Il quinto capitolo contiene alcune esempi pratici di utilizzo del simulatore.
 
-Questo manuale si riferisce ad EduMIPS64 versione 1.0.
+Questo manuale si riferisce ad EduMIPS64 versione 1.1.
 
 .. toctree::
    :maxdepth: 2

@@ -1,77 +1,91 @@
 <!-- build.xml
 
      ant build file for EduMIPS64.
-     (c) 2006-2011 Andrea Spadaccini and the EduMIPS64 dev team.
+     (c) 2006-2013 Andrea Spadaccini and the EduMIPS64 dev team.
 
      Useful targets:
-     - debugjar         builds the GUI version (edumips64-debug.jar) with debug symbols
-     - jar              builds the GUI version (edumips64-VERSION.jar) without debug symbols
-     - clijar           builds the CLI version
+     - slim-jar         builds the GUI version, with no javahelp libraries.
+     - standalone-jar   builds the GUI version, with embedded javahelp libraries.
+     - applet-jar       builds the standalone-jar version and signs it, making
+                        it suitable for use as a web applet.
      - clean            removes the jar file and the build dir
+     - docs             builds the HTML and PDF docs, both in english and in 
+                        italian
+
+    The output file names are in the init target.
 -->
-<project name="edumips64" default="debugjar" basedir=".">
+<project name="edumips64" default="slim-jar" basedir=".">
 	<target name="init">
+        <!-- Set build file properties -->
+        <property name="sourceDir" value="src/org/edumips64/" />
+		<property name="version" value="1.1" />
+		<property name="outputDir" value="build" />
+		<property name="javadocDir" value="javadoc" />
+
         <!-- Access the environment -->
         <property environment="env" />
-        <property name="base.classpath" value="${env.CLASSPATH}" />
+        <property name="base.classpath" value="libs:libs/junit-4.10.jar:libs/hamcrest-core-1.3.jar:${env.CLASSPATH}" />
 
-        <!-- Set build file properties -->
-		<property name="sourceDir" value="." />
-        <property name="helpClassesDir" value="./libs" />
-		<property name="version" value="1.0" />
-		<property name="outputDir" value="edumips" />
-		<property name="javadocDir" value="javadoc" />
-		<property name="tarbz2File" value="edumips64-${version}.tar.bz2" />
-		<property name="debug_jar_filename" value="edumips64-debug.jar" />
-		<property name="release_jar_filename" value="edumips64-${version}.jar" />
+        <!-- File names -->
+		<property name="standalone_jar_filename" value="edumips64-${version}.jar" />
+		<property name="slim_jar_filename" value="edumips64-${version}-nodeps.jar" />
+		<property name="applet_jar_filename" value="edumips64-${version}-applet.jar" />
 		<property name="cli_jar_filename" value="edumips64-${version}-cli.jar" />
+		<property name="tarbz2File" value="edumips64-${version}.tar.bz2" />
 
         <!-- Docs directories -->
         <property name="docs_src_it" value="docs/it/src" />
         <property name="docs_src_en" value="docs/en/src" />
+
+        <!-- Compilation options -->
+        <property name="src_java_version" value="6" />
+        <property name="dst_java_version" value="6" />
+        <property name="debug" value="on" />
 	</target>
 
-    <target name="mkdirs" depends="init,htmldoc">
-        <!-- Create directories for the compilation process. -->
+  <target name="mkdirs" depends="init">
+    <!-- Create directories for the compilation process. -->
 		<mkdir dir="${outputDir}" />
-		<mkdir dir="${outputDir}/edumips64/img" />
-		<mkdir dir="${outputDir}/edumips64/utils" />
-		<mkdir dir="${outputDir}/edumips64/help" />
-    </target>
+  </target>
 
     <!-- *** clean *** target that cleans the built files and the build directory-->
 	<target name="clean" depends="init,cleandocs">
-		<delete file="${release_jar_filename}" />
-		<delete file="${debug_jar_filename}" />
+		<delete file="${standalone_jar_filename}" />
+		<delete file="${tarbz2File}" />
+		<delete file="${applet_jar_filename}" />
+		<delete file="${slim_jar_filename}" />
+		<delete file="${cli_jar_filename}" />
         <delete dir="${outputDir}" />
         <delete dir="${javadocDir}" />
 	</target>
 
-    <target name="cleandocs" depends="init">
-        <delete dir="${docs_src_it}/../output" />
-        <delete dir="${docs_src_en}/../output" />
-    </target>
+  <target name="cleandocs" depends="init">
+      <delete dir="${docs_src_it}/../output" />
+      <delete dir="${docs_src_en}/../output" />
+  </target>
 
     <!-- *** javadoc *** build the javadoc -->
 	<target name="javadoc" depends="init">
-	<mkdir dir="${javadocDir}" />
-        <javadoc
-            destdir="${javadocDir}"
+    <mkdir dir="${javadocDir}" />
+      <javadoc
+        destdir="${javadocDir}"
 		    author="true"
 		    version="true"
 		    use="true"
 		    additionalparam=" -encoding ISO-8859-1"
-		    sourcepath="${sourceDir}/.."
-            	    classpath="${base.classpath}:${helpClassesDir}"
-		    packagenames="edumips64.*"/>
+        sourcepath="${sourceDir}/../../"
+        classpath="${base.classpath}:${base.classpath}"
+		    packagenames="org.edumips64.*"/>
 	</target>
 
     <!-- *** docs *** builds all the docs (html, pdf in both languages) -->
     <target name="docs" depends="htmldoc,pdfdoc" />
-    <target name="docs_it" depends="html_it,pdf_it" />
-    <target name="docs_en" depends="html_en,pdf_en" />
+
+    <!-- miscellaneous docs targets -->
     <target name="htmldoc" depends="html_it,html_en" />
     <target name="pdfdoc" depends="pdf_it,pdf_en" />
+    <target name="docs_it" depends="html_it,pdf_it" />
+    <target name="docs_en" depends="html_en,pdf_en" />
 
     <target name="html_it" depends="init">
         <exec executable="make" failonerror="true" dir="${docs_src_it}">
@@ -85,7 +99,6 @@
         </exec>
     </target>
 
-
     <target name="pdf_it" depends="init">
         <exec executable="make" failonerror="true" dir="${docs_src_it}">
             <arg line="latexpdf"/>
@@ -98,154 +111,187 @@
         </exec>
     </target>
 
-
-    <!-- *** tests *** run unit tests-->
-    <target name="tests" depends="mkdirs">
+    <!-- *** test *** run unit tests-->
+    <target name="test" depends="mkdirs">
         <javac
-            target="5"
+            source="${src_java_version}"
+            target="${dst_java_version}"
             srcdir="${sourceDir}"
-            classpath="${base.classpath}:${helpClassesDir}"
             destdir="${outputDir}"
-            nowarn="yes"
-            debug="on"
+            debug="${debug}"
             includeantruntime="false"
+            classpath="${base.classpath}"
             debuglevel="lines,vars,source">
             <compilerarg value="-Xlint"/>
+            <compilerarg value="-Xlint:-serial"/>
         </javac>
 
-        <junit printsummary="true">
+        <junit printsummary="true" haltonfailure="yes" haltonerror="yes">
             <classpath>
                 <pathelement path="${base.classpath}"/>
-            </classpath>
-            <classpath>
                 <pathelement path="${outputDir}"/>
             </classpath>
-            <test name="edumips64.tests.CpuTests">
+            <test name="org.edumips64.tests.CpuTests">
                 <formatter type="plain" usefile="false"/>
             </test>
         </junit>
+        <delete dir="${outputDir}" />
     </target>
 
-
-    <!-- *** debugjar *** compile with debug information and set the jar
-         filename to edumips64-debug.jar -->
-	<target name="debugjar" depends="mkdirs">
+    <!-- *** standalone-jar *** compile with embedded javahelp -->
+	<target name="standalone-jar" depends="mkdirs,htmldoc">
         <javac
-            target="5"
+            source="${src_java_version}"
+            target="${dst_java_version}"
             srcdir="${sourceDir}"
             excludes="tests/**"
-            classpath="${helpClassesDir}"
             destdir="${outputDir}"
-            nowarn="yes"
-            debug="on"
             includeantruntime="false"
-            debuglevel="lines,vars,source"/>
-        <property name="app_type" value="GUI" />
-        <property name="jar_filename" value="${debug_jar_filename}" />
-        <antcall target="makeGUIJar" />
-    </target>
+            classpath="${base.classpath}">
+            <compilerarg value="-Xlint"/>
+            <compilerarg value="-Xlint:-serial"/>
+        </javac>
 
-    <!-- *** jar *** compile without debug information and set the jar
-         filename to edumips64-VERSION.jar -->
-	<target name="jar" depends="mkdirs">
+        <property name="jar_filename" value="${standalone_jar_filename}" />
+        <property name="main_class" value="org.edumips64.Main" />
+        <property name="splash_img" value="org/edumips64/img/splash.png"/>
+
+        <antcall target="copy-base-files" />
+        <antcall target="copy-help-files" />
+        <antcall target="copy-help-libs" />
+        <antcall target="make-jarfile" />
+	</target>
+
+    <!-- *** applet-jar *** like standalone-jar, but sign it at the end. -->
+	<target name="applet-jar" depends="mkdirs,htmldoc">
         <javac
-            target="5"
+            source="${src_java_version}"
+            target="${dst_java_version}"
             srcdir="${sourceDir}"
             excludes="tests/**"
-            classpath="${helpClassesDir}"
             destdir="${outputDir}"
             includeantruntime="false"
-            nowarn="yes"/>
+            debug="${debug}"
+            classpath="${base.classpath}"
+            debuglevel="lines,vars,source">
+            <compilerarg value="-Xlint"/>
+            <compilerarg value="-Xlint:-serial"/>
+        </javac>
 
-        <property name="app_type" value="GUI" />
-        <property name="jar_filename" value="${release_jar_filename}" />
-        <antcall target="makeGUIJar" />
+        <property name="jar_filename" value="${applet_jar_filename}" />
+        <property name="main_class" value="org.edumips64.Main" />
+        <property name="splash_img" value="${sourceDir}/img/splash.png"/>
+
+        <antcall target="copy-base-files" />
+        <antcall target="copy-help-files" />
+        <antcall target="copy-help-libs" />
+        <antcall target="make-jarfile" />
+        <signjar jar="${applet_jar_filename}" keystore="utils/key-edumips" storepass="123456" keypass="123456" alias="edumips64" />
 	</target>
 
-    <!-- *** clijar *** compile with debug information, set the CLI Main and set the jar
-         filename to edumips64-VERSION.jar -->
-	<target name="clijar" depends="mkdirs">
+    <!-- *** slim-jar *** compile without javahelp. -->
+	<target name="slim-jar" depends="mkdirs,htmldoc">
         <javac
-            target="5"
+            source="${src_java_version}"
+            target="${dst_java_version}"
             srcdir="${sourceDir}"
-            excludes="${sourceDir}/tests/**"
-            classpath="${helpClassesDir}"
+            excludes="tests/**"
             destdir="${outputDir}"
-            nowarn="yes"
-            debug="on"
             includeantruntime="false"
-            debuglevel="lines,vars,source"/>
+            debug="${debug}"
+            classpath="${base.classpath}"
+            debuglevel="lines,vars,source">
+            <compilerarg value="-Xlint"/>
+            <compilerarg value="-Xlint:-serial"/>
+        </javac>
 
-        <property name="app_type" value="CLI" />
-        <property name="jar_filename" value="${release_jar_filename}" />
-        <antcall target="makeCLIJar" />
+        <property name="jar_filename" value="${slim_jar_filename}" />
+        <property name="main_class" value="org.edumips64.Main" />
+        <property name="splash_img" value="${sourceDir}/img/splash.png"/>
+
+        <antcall target="copy-help-files" />
+        <antcall target="make-jarfile" />
 	</target>
 
-    <!-- TODO: remove duplicated code between makeCLIJar and makeGUIjar -->
-    <target name="makeCLIJar">
-		<copy todir="${outputDir}/edumips64/img">
-			<fileset dir="img">
-				<include name="**/*.png" />
-			</fileset>
-		</copy>
-		<copy todir="${outputDir}/edumips64/utils">
-			<fileset dir="utils">
-				<include name="**/*.properties" />
-			</fileset>
-		</copy>
-        <jar destfile="${cli_jar_filename}" basedir="${outputDir}">
+    <!-- *** cli-jar *** runs org.edumips64.MainCLI -->
+	<target name="cli-jar" depends="mkdirs,htmldoc">
+        <javac
+            source="${src_java_version}"
+            target="${dst_java_version}"
+            srcdir="${sourceDir}"
+            excludes="tests/**"
+            destdir="${outputDir}"
+            debug="${debug}"
+            includeantruntime="false"
+            debuglevel="lines,vars,source"
+            classpath="${base.classpath}">
+            <compilerarg value="-Xlint"/>
+            <compilerarg value="-Xlint:-serial"/>
+        </javac>
+
+        <property name="jar_filename" value="${cli_jar_filename}" />
+        <property name="main_class" value="org.edumips64.MainCLI" />
+
+        <antcall target="make-jarfile" />
+	</target>
+
+    <target name="make-jarfile">
+        <antcall target="copy-base-files" />
+        <jar destfile="${jar_filename}" basedir="${outputDir}">
             <manifest>
-                <attribute name="Main-Class" value="edumips64.MainCLI"/>
+                <attribute name="Main-Class" value="${main_class}"/>
+                <attribute name="SplashScreen-Image" value="${splash_img}"/>
             </manifest>
         </jar>
-		<signjar jar="${cli_jar_filename}" keystore="key-edumips" storepass="123456" keypass="123456" alias="edumips64" />
         <delete dir="${outputDir}" />
 	</target>
 
-    <target name="makeGUIJar">
-        <!-- Help -->
-        <copy todir="${outputDir}/edumips64/help/en/html">
+    <!-- Utility targets to copy files. -->
+    <target name="copy-help-files">
+        <copy todir="${outputDir}/org/edumips64/help/en/html">
             <fileset dir="docs/en/output/html">
 				<include name="**/*.*" />
 			</fileset>
         </copy>
-        <copy todir="${outputDir}/edumips64/help/en">
+        <copy todir="${outputDir}/org/edumips64/help/en">
             <fileset dir="docs/en/javahelp">
 				<include name="**/*.*" />
 			</fileset>
         </copy>
-        <copy todir="${outputDir}/edumips64/help/it/html">
+        <copy todir="${outputDir}/org/edumips64/help/it/html">
             <fileset dir="docs/it/output/html">
 				<include name="**/*.*" />
 			</fileset>
         </copy>
-        <copy todir="${outputDir}/edumips64/help/it/img">
+        <copy todir="${outputDir}/org/edumips64/help/it/img">
             <fileset dir="docs/img">
 				<include name="**/*.*" />
 			</fileset>
         </copy>
-        <copy todir="${outputDir}/edumips64/help/en/img">
+        <copy todir="${outputDir}/org/edumips64/help/en/img">
             <fileset dir="docs/img">
 				<include name="**/*.*" />
 			</fileset>
         </copy>
-        <copy todir="${outputDir}/edumips64/help/it">
+        <copy todir="${outputDir}/org/edumips64/help/it">
             <fileset dir="docs/it/javahelp">
 				<include name="**/*.*" />
 			</fileset>
         </copy>
-
-        <!-- Other things -->
-		<copy todir="${outputDir}/edumips64/img">
-			<fileset dir="img">
+    </target>
+    <target name="copy-base-files">
+        <copy todir="${outputDir}/org/edumips64/img">
+            <fileset dir="${sourceDir}/img">
 				<include name="**/*.png" />
 			</fileset>
 		</copy>
-		<copy todir="${outputDir}/edumips64/utils">
-			<fileset dir="utils">
+        <copy todir="${outputDir}/org/edumips64/utils">
+            <fileset dir="${sourceDir}/utils">
 				<include name="**/*.properties" />
 			</fileset>
 		</copy>
+    </target>
+    <target name="copy-help-libs">
         <copy todir="${outputDir}/com">
             <fileset dir="libs/com">
                 <include name="**/*.class" />
@@ -256,29 +302,32 @@
                 <include name="**/*.class" />
             </fileset>
         </copy>
-        <jar destfile="${jar_filename}" basedir="${outputDir}">
-            <manifest>
-                <attribute name="Main-Class" value="edumips64.Main"/>
-                <attribute name="SplashScreen-Image" value="edumips64/img/splash.png"/>
-            </manifest>
-        </jar>
-		<signjar jar="${jar_filename}" keystore="key-edumips" storepass="123456" keypass="123456" alias="edumips64" />
-        <delete dir="${outputDir}" />
-	</target>
+    </target>
 
-    <target name="src-release" depends="init">
-        <mkdir dir="edumips64" />
-		<copy todir="edumips64/">
-			<fileset dir=".">
-				<include name="**/*" />
-				<exclude name="**/*.jar" />
-				<exclude name="${outputDir}" />
-				<exclude name="edumips64" />
-				<exclude name="**/*.tbz2" />
-			</fileset>
-		</copy>
+    <!-- Source release -->
+    <target name="src-release" depends="clean,init">
+      <mkdir dir="edumips64-${version}" />
+      <copy todir="edumips64-${version}/">
+        <fileset dir=".">
+          <include name="authors" />
+          <include name="build.xml" />
+          <include name="ChangeLog" />
+          <include name="LICENSE" />
+          <include name="readme.md" />
+          <include name="RELEASE_NOTES" />
+          <include name="docs/**/*" />
+          <include name="src/**/*" />
+          <include name="utils/**/*" />
+        </fileset>
+      </copy>
+      <mkdir dir="edumips64-${version}/libs" />
+      <copy todir="edumips64-${version}/libs">
+        <fileset dir="misc">
+          <include name="README.libs" />
+        </fileset>
+      </copy>
 
-        <tar destfile="${tarbz2File}" basedir="." includes="edumips64/" compression="bzip2" />
-        <delete dir="edumips64" />
+      <tar destfile="${tarbz2File}" basedir="." includes="edumips64-${version}/" compression="bzip2" />
+      <delete dir="edumips64-${version}" />
     </target>
 </project>
