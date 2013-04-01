@@ -1,12 +1,13 @@
 = Project Progress report: Pipeline Mechanics
+:author: Chris Morin and Dirk Dubois
 
 == Abstract
-
-To progress with the evaluation of the MIPS64 Pipeline mechanics, the eduMIPS64 environment was examined. EduMIPS64 uses a simple forwarding mechanism which while elegant in its simplicity, doesn’t allow for customisation. EduMIPS64 is being modified to allow more control over which forwarding paths can be taken. Also, a set of test bench assembly files were created that generate read after write dependencies that can be resolved with forwarding.
+.Abstract
+To progress with the evaluation of the MIPS64 Pipeline mechanics, the eduMIPS64 environment was examined. EduMIPS64 uses a simple forwarding mechanism which while elegant in its simplicity, doesn't allow for customisation. EduMIPS64 is being modified to allow more control over which forwarding paths can be taken. Also, a set of test bench assembly files were created that generate read after write dependencies that can be resolved with forwarding.
 
 == Work Completed
 
-===The MIPS64 EDU environment
+=== The MIPS64 EDU environment
 
 The MIPS64 EDU environment is a platform of choice to examine the various functional differences of the MIPS64 pipeline. This java base simulator provides a set of tools to examine the pipeline, where instructions are stalled, the contents of the registers, and the overall structure of memory. Using all of these tools we are able to evaluate the performance of our pipeline as we make changes to its structure. 
 
@@ -14,7 +15,7 @@ The MIPS64 EDU environment is a platform of choice to examine the various functi
 
 The eduMIPS64 simulator code was examined and the way it implements forwarding was studied. It was found that eduMIPS64 uses a simply but inflexible way of managing forwarding: it simply executes the write-back stage of an instruction as soon as the data is available. The simulator uses semaphores associated to the registers to manage if a register has been needs to be written to. The write-back stage of these forwarded instructions also decrements these semaphores to signal their availability.
 
-A plan to implement more customisable forwarding was devised. Instead of there being one flag signaling that forwarding has been enabled, there will be two: one signaling that forwarding is enabled at the EX stage and the other signaling it’s available at the MEM stage. This would provide us with a total of four forwarding options.
+A plan to implement more customisable forwarding was devised. Instead of there being one flag signaling that forwarding has been enabled, there will be two: one signaling that forwarding is enabled at the EX stage and the other signaling it's available at the MEM stage. This would provide us with a total of four forwarding options.
 
 * no forwarding
 * forwarding at the EX stage only
@@ -30,6 +31,7 @@ In order to test if the pipeline will stall on a read after write (RAW), the tes
 Two RAW data hazard test benches were written. The first creates a true data dependency between two registers that can be solved by forwarding to the EX stage. The second creates a dependency between two registers needed for a load and store operation, which can be solved by forwarding from the EX stage to the MEM stage and from the MEM stage to the EX stage. For the second test case, since memory is being used, there will still be at best one RAW stall.
 
 The following code snippet shows a portion of data hazard test bench 1:
+--------------------------------------------------------------------
 	;Do Useful work
 	;Without forwarding 2 RAW stalls expected due to R1 dependency
 	;Adding forwarding from EX to back to EX will solve this stall
@@ -39,9 +41,11 @@ The following code snippet shows a portion of data hazard test bench 1:
 	
 	DADDI R3, R3, 0 ;Execute filler instruction
 	SYSCALL 0 ;Exit program
+--------------------------------------------------------------------
 
 == Work Remaining
-We still have to implement the additional forwarding functionality. We’ also have to write more test cases and possibly find some existing MIPS64 assembly code to test. We’ll create an automation script which collects the data from the various simulator runs and sees how the performance changes with the instruction type frequencies and the forwarding options.
-Issues Encountered
+We still have to implement the additional forwarding functionality. We' also have to write more test cases and possibly find some existing MIPS64 assembly code to test. We'll create an automation script which collects the data from the various simulator runs and sees how the performance changes with the instruction type frequencies and the forwarding options.
 
-At this point we haven’t encountered many issues as we haven’t actually done much simulating. The eduMIPS64 simulator code base was quite extensive and finding how to modify the forwarding paths without spending days searching through source code was a challenge and required us to generate the JavaDoc from the source files and work through a CPU “step” in our heads.
+== Issues Encountered
+
+At this point we haven't encountered many issues as we haven't actually done much simulating. The eduMIPS64 simulator code base was quite extensive and finding how to modify the forwarding paths without spending days searching through source code was a challenge and required us to generate the JavaDoc from the source files and work through a CPU "step" in our heads.
