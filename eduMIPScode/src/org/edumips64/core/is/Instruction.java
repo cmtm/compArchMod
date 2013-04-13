@@ -48,6 +48,10 @@ public abstract class Instruction {
   protected RegisterFP[] TRfp;
   protected String fullname;
   protected static boolean enableForwarding = Config.getBoolean("forwarding");
+  
+  protected static boolean enableForwardingALU = Config.getBoolean("forwarding_alu");
+  protected static boolean enableForwardingLDST = Config.getBoolean("forwarding_ldst");
+  
   protected String label;
   protected static final Logger logger = Logger.getLogger(Instruction.class.getName());
   protected Integer serialNumber;
@@ -917,6 +921,36 @@ public abstract class Instruction {
    * */
   public static boolean getEnableForwarding() {
     return enableForwarding;
+  }
+  
+  public static void setForwardingMode(Forwarding mode) {
+	enableForwarding = false;
+	enableForwardingALU = false;
+	enableForwardingLDST = false;
+    switch(mode) {
+		case FULL:
+			enableForwarding = true;
+		break;
+		case ALU:
+			enableForwardingALU = true;
+		break;
+		case LDST:
+			enableForwardingLDST = true;
+		break;
+		default:
+			break;
+	}			
+  }
+  
+  public static Forwarding getForwardingMode() {
+    if(enableForwarding)
+      return Forwarding.FULL;
+    else if(enableForwardingALU)
+	  return Forwarding.ALU;
+	else if(enableForwardingLDST)
+	  return Forwarding.LDST;
+	else
+	  return Forwarding.NONE;
   }
 
   /**<pre>

@@ -30,6 +30,8 @@ import java.util.*;
 import java.util.jar.*;
 import java.util.logging.Logger;
 import java.util.prefs.Preferences;
+import org.edumips64.core.is.Forwarding;
+
 
 /** This class manage the org.edumips64.config file
  * used for saving user preferences (like language, etc)
@@ -63,7 +65,11 @@ public class Config {
     defaults.put("SAMEIFColor", new Color(150, 150, 180).getRGB());
 
     // Simulation parameters.
+    defaults.put("forwarding_none", true);
     defaults.put("forwarding", false);
+    defaults.put("forwarding_alu", false);
+    defaults.put("forwarding_ldst", false);    
+    
     defaults.put("warnings", false);
     defaults.put("verbose", true);
     defaults.put("syncexc-masked", false);
@@ -140,6 +146,34 @@ public class Config {
 
     return prefs.getBoolean(key, default_value);
   }
+  
+  //public static void putForwarding(String key, Forwarding value) {
+	  //putInt(key, value.ordinal())
+  //}
+  
+  //public static Forwarding getForwarding(String key) {
+	  //return new Forwarding.values()[getInt(key)];
+  //}
+  
+  public static void putForwardingMode(Forwarding mode) {
+	  putBoolean("forwarding_none", mode == Forwarding.NONE);
+  	  putBoolean("forwarding", mode == Forwarding.FULL);
+  	  putBoolean("forwarding_alu", mode == Forwarding.ALU);
+  	  putBoolean("forwarding_ldst", mode == Forwarding.LDST);
+  }
+  
+  public static Forwarding getForwardingMode() {
+    if(getBoolean("forwarding_none"))
+      return Forwarding.NONE;
+    else if(getBoolean("forwarding"))
+      return Forwarding.FULL;
+    else if(getBoolean("forwarding_alu"))
+	  return Forwarding.ALU;
+	else if(getBoolean("forwarding_ldst"))
+	  return Forwarding.LDST;
+	else
+	  return Forwarding.NONE;
+  }
 
   // ---- Color. Serialized as an int.
   public static void putColor(String key, Color value) {
@@ -163,7 +197,9 @@ public class Config {
         putBoolean(key, (Boolean) value);
       } else if (value instanceof Color) {
         putColor(key, (Color) value);
-      } else {
+//      } else if (value instanceof Forwarding) {
+//		putForwarding(key, (Forwarding) value)
+	  } else {
         logger.severe("Unknown type for default value " + value + " (" + key + ")");
       }
     }

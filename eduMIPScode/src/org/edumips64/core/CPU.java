@@ -498,7 +498,14 @@ public class CPU {
           currentPipeStatus = PipeStatus.EX;
 
           if (pipe.get(PipeStatus.EX) != null) {
-            pipe.get(PipeStatus.EX).EX();
+            Instruction instr = pipe.get(PipeStatus.EX);
+            instr.EX();
+            if(Instruction.getForwardingMode() == Forwarding.ALU) {
+				if(instr instanceof ALU_IType)
+					((ALU_IType)instr).doWB();
+				if(instr instanceof ALU_RType)
+					((ALU_RType)instr).doWB();
+			}
           }
         } catch (SynchronousException e) {
           if (masked) {
@@ -530,6 +537,9 @@ public class CPU {
         Instruction instr;
         //call EX
         instr = fpPipe.getInstruction(SIMUL_MODE_DISABLED);
+        
+		if(instr instanceof FPArithmeticInstructions)
+			((FPArithmeticInstructions)instr).doWB();
 
         try {
           // Handling synchronous exceptions

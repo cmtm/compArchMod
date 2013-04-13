@@ -76,7 +76,7 @@ public class ALU_IType extends ComputationalInstructions {
 
 
   public void WB() throws IrregularStringOfBitsException {
-    if (!enableForwarding) {
+    if (!enableForwarding && !enableForwardingALU) {
       doWB();
     }
   }

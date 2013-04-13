@@ -26,6 +26,7 @@ import org.edumips64.utils.Config;
 import org.edumips64.utils.CurrentLocale;
 import org.edumips64.Main;
 import org.edumips64.core.is.Instruction;
+import org.edumips64.core.is.Forwarding;
 import org.edumips64.core.CPU;
 
 import java.util.*;
@@ -86,6 +87,16 @@ public class GUIConfig extends JDialog {
 
   //INIZIA ZTUDIO
   private JPanel makeMainPanel() {
+	  
+	ButtonGroup bg = new ButtonGroup();
+	JRadioButton noForwarding = new JRadioButton();
+    JRadioButton fullForwarding = new JRadioButton();
+    JRadioButton aluForwarding = new JRadioButton();
+    JRadioButton ldstForwarding = new JRadioButton();
+    bg.add(noForwarding);
+    bg.add(fullForwarding);
+    bg.add(aluForwarding);
+    bg.add(ldstForwarding);
 
     gbl = new GridBagLayout();
     gbc = new GridBagConstraints();
@@ -100,7 +111,10 @@ public class GUIConfig extends JDialog {
     panel.setAlignmentY(JPanel.TOP_ALIGNMENT);
     int row = 2;
 
-    addRow(panel, row++, "forwarding", new JCheckBox());
+	addRow(panel, row++, "forwarding_none", noForwarding);
+    addRow(panel, row++, "forwarding", fullForwarding);
+    addRow(panel, row++, "forwarding_alu", aluForwarding);
+    addRow(panel, row++, "forwarding_ldst", ldstForwarding);
     addRow(panel, row++, "n_step", new JNumberField());
 
     // fill remaining vertical space
@@ -231,6 +245,9 @@ public class GUIConfig extends JDialog {
     //panel.setSize(width,height - buttonHeight);
     return panel;
   }
+  
+  
+  
   public void addRow(JPanel panel, final int row, final String key, final JComponent comp) {
     String title = CurrentLocale.getString("Config." + key.toUpperCase());
     String tip = CurrentLocale.getString("Config." + key.toUpperCase() + ".tip");
@@ -249,9 +266,9 @@ public class GUIConfig extends JDialog {
       cbox.setVerticalAlignment(SwingConstants.CENTER);
       cbox.setSelected(Config.getBoolean(key));
 
-      cbox.setAction(new AbstractAction() {
-        public void actionPerformed(ActionEvent e) {
-          Config.putBoolean(key, cbox.getModel().isSelected());
+      cbox.addItemListener(new ItemListener() {
+        public void itemStateChanged(ItemEvent e) {
+          Config.putBoolean(key, e.getStateChange() == ItemEvent.SELECTED);
         }
       });
     } else if (comp instanceof JRadioButton) {
@@ -260,22 +277,11 @@ public class GUIConfig extends JDialog {
       rbut.setVerticalAlignment(SwingConstants.CENTER);
       rbut.setSelected(Config.getBoolean(key));
 
-      // When a radio button is clicked, the other buttons must be deselected.
-      rbut.setAction(new AbstractAction() {
-        public void actionPerformed(ActionEvent e) {
-          LinkedList<String> keys = new LinkedList<String>();
-          keys.add("NEAREST");
-          keys.add("TOWARDZERO");
-          keys.add("TOWARDS_PLUS_INFINITY");
-          keys.add("TOWARDS_MINUS_INFINITY");
-
-          Config.putBoolean(key, true);
-          keys.remove(key);
-
-          for (String k : keys) {
-            Config.putBoolean(k, false);
-          }
+      rbut.addItemListener(new ItemListener() {
+        public void itemStateChanged(ItemEvent e) {
+          Config.putBoolean(key, e.getStateChange() == ItemEvent.SELECTED);
         }
+
       });
     } else if (comp instanceof JNumberField) {
       final JNumberField number = (JNumberField) comp;
@@ -378,9 +384,9 @@ public class GUIConfig extends JDialog {
         org.edumips64.Main.getGUIFrontend().updateComponents();
         setVisible(false);
 
-        if (Instruction.getEnableForwarding() != Config.getBoolean("forwarding")) {
+        if (Instruction.getForwardingMode() != Config.getForwardingMode()) {
           CPU cpu = CPU.getInstance();
-          Instruction.setEnableForwarding(Config.getBoolean("forwarding"));
+          Instruction.setForwardingMode(Config.getForwardingMode());
 
           // Let's verify that we have to reset the CPU
           if (cpu.getStatus() == CPU.CPUStatus.RUNNING) {
@@ -388,6 +394,7 @@ public class GUIConfig extends JDialog {
             org.edumips64.Main.resetSimulator(true);
           }
         }
+        
 
         org.edumips64.Main.updateCGT();
 
